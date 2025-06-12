@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İnteraktif Türkçe Test Oyunu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --chalk-color: #f0f0f0;
+            --board-bg: #3a4a41;
+            --correct-color: #2ecc71;
+            --incorrect-color: #e74c3c;
+            --wood-frame: #855B32;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #36454F;
+            background-image: url('https://www.transparenttextures.com/patterns/crissxcross.png');
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--chalk-color);
+            padding: 15px;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--board-bg);
+            border: 15px solid var(--wood-frame);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5), inset 0 0 10px rgba(0,0,0,0.4);
+            position: relative;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px dashed rgba(255,255,255,0.3);
+        }
+
+        #lives {
+            font-size: 1.8rem;
+            color: #f1c40f;
+            display: flex;
+            gap: 5px;
+        }
+
+        #question-counter {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .question-area {
+            text-align: center;
+        }
+        
+        #paragraph-text {
+            background-color: rgba(255,255,255,0.08);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-style: italic;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            text-align: left;
+        }
+
+        #question-text {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            width: 100%;
+            padding: 15px;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+        }
+
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+        }
+        
+        .option-btn:active:not(:disabled) {
+            transform: translateY(1px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.2);
+        }
+        
+        .option-btn:disabled {
+            cursor: not-allowed;
+        }
+
+        .option-btn.correct {
+            background-color: var(--correct-color) !important;
+        }
+
+        .option-btn.incorrect {
+            background-color: var(--incorrect-color) !important;
+        }
+
+        .results-screen {
+            display: none; /* Başlangıçta gizli */
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        #results-title {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        
+        #results-message {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+        
+        #restart-btn {
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--board-bg);
+            background-color: var(--chalk-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        
+        #restart-btn:hover {
+            background-color: #f1c40f;
+        }
+
+        /* Mobil Cihazlar için Ayarlamalar */
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 15px;
+                border-width: 10px;
+            }
+            #question-text {
+                font-size: 1.2rem;
+            }
+            .option-btn {
+                font-size: 1rem;
+                padding: 12px;
+            }
+            #lives {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <!-- Oyun Ekranı -->
+        <div id="game-screen">
+            <div class="game-header">
+                <div id="lives"></div>
+                <div id="question-counter"></div>
+            </div>
+            <div class="question-area">
+                <div id="paragraph-text" style="display: none;"></div>
+                <h2 id="question-text"></h2>
+                <div id="options-container" class="options-container"></div>
+            </div>
+        </div>
+
+        <!-- Sonuç Ekranı -->
+        <div id="results-screen" class="results-screen">
+            <h2 id="results-title">Oyun Bitti!</h2>
+            <p id="results-message"></p>
+            <button id="restart-btn">Tekrar Oyna</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                paragraph: "Küçük sincap Sisi, ormanın en meraklı sincabıydı. Her gün yeni bir macera peşinde koşardı. Bir sabah, daha önce hiç görmediği parlak, mavi bir tüy buldu. Bu tüyün kime ait olduğunu bulmak için yola koyuldu. Bilge baykuşa, hızlı tavşana ve neşeli serçeye sordu ama kimse tüyün sahibini bilmiyordu. Sisi pes etmedi ve aramaya devam etti. Sonunda, dere kenarında resim yapan ressam kirpinin yanına geldi. Meğer mavi tüy, ressam kirpinin fırça yapmak için kullandığı tüylerden biriymiş!",
+                question: "Sincap Sisi'nin en belirgin özelliği nedir?",
+                options: ["Uykucu olması", "Meraklı olması", "Korkak olması"],
+                answer: 1
+            },
+            {
+                paragraph: "Küçük sincap Sisi, ormanın en meraklı sincabıydı. Her gün yeni bir macera peşinde koşardı. Bir sabah, daha önce hiç görmediği parlak, mavi bir tüy buldu. Bu tüyün kime ait olduğunu bulmak için yola koyuldu. Bilge baykuşa, hızlı tavşana ve neşeli serçeye sordu ama kimse tüyün sahibini bilmiyordu. Sisi pes etmedi ve aramaya devam etti. Sonunda, dere kenarında resim yapan ressam kirpinin yanına geldi. Meğer mavi tüy, ressam kirpinin fırça yapmak için kullandığı tüylerden biriymiş!",
+                question: "Sisi, mavi tüyün sahibini bulmak için kimden yardım <strong>istememiştir</strong>?",
+                options: ["Bilge baykuştan", "Kurnaz tilkiden", "Hızlı tavşandan"],
+                answer: 1
+            },
+            {
+                paragraph: "Küçük sincap Sisi, ormanın en meraklı sincabıydı. Her gün yeni bir macera peşinde koşardı. Bir sabah, daha önce hiç görmediği parlak, mavi bir tüy buldu. Bu tüyün kime ait olduğunu bulmak için yola koyuldu. Bilge baykuşa, hızlı tavşana ve neşeli serçeye sordu ama kimse tüyün sahibini bilmiyordu. Sisi pes etmedi ve aramaya devam etti. Sonunda, dere kenarında resim yapan ressam kirpinin yanına geldi. Meğer mavi tüy, ressam kirpinin fırça yapmak için kullandığı tüylerden biriymiş!",
+                question: "Metne göre mavi tüy kime aitmiş?",
+                options: ["Neşeli serçeye", "Bilge baykuşa", "Ressam kirpiye"],
+                answer: 2
+            },
+            {
+                question: "Aşağıdaki kelime çiftlerinden hangisi <strong>zıt (karşıt)</strong> anlamlıdır?",
+                options: ["Siyah - Kara", "Uzun - Kısa", "Hediye - Armağan"],
+                answer: 1
+            },
+            {
+                question: "'<strong>Doktor</strong>, hastasını muayene etti.' cümlesindeki '<strong>doktor</strong>' kelimesinin eş anlamlısı hangisidir?",
+                options: ["Öğretmen", "Eczacı", "Hekim"],
+                answer: 2
+            },
+            {
+                question: "'Kalem, silgi, defter, kitap' kelimeleri sözlük sırasına göre dizildiğinde hangisi <strong>en sonda</strong> yer alır?",
+                options: ["Silgi", "Defter", "Kalem"],
+                answer: 0
+            },
+            {
+                question: "'Yarın parka gidecek misin' cümlesinin sonuna hangi noktalama işareti gelmelidir?",
+                options: ["Nokta (.)", "Ünlem işareti (!)", "Soru işareti (?)"],
+                answer: 2
+            },
+            {
+                question: "'Çok kitap okurum, ............ kelime bilgim çok gelişti.' cümlesindeki boşluğa hangisi gelmelidir?",
+                options: ["çünkü", "ama", "bu yüzden"],
+                answer: 2
+            },
+            {
+                question: "Aşağıdaki seçeneklerin hangisinde sadece varlıkların adları (isimler) yer almaktadır?",
+                options: ["ağaç, koş, güzel", "su, çocuk, sevinç", "hızlı, masa, oku"],
+                answer: 1
+            },
+            {
+                question: "'Kırmızı araba hızla uzaklaştı.' cümlesinde varlığın özelliğini bildiren kelime (sıfat) hangisidir?",
+                options: ["Araba", "Kırmızı", "Hızla"],
+                answer: 1
+            },
+            {
+                question: "Aşağıdaki kelimelerden hangisinin yazımı doğrudur?",
+                options: ["Herkez", "Yalnış", "Tren"],
+                answer: 2
+            },
+            {
+                question: "'Annem ile babam bize ................. .' cümlesi hangisiyle <strong>tamamlanamaz</strong>?",
+                options: ["geldi", "geldiler", "geliyorlar"],
+                answer: 0
+            },
+            {
+                question: "Aşağıdaki cümlelerin hangisinde <strong>neden-sonuç ilişkisi</strong> vardır?",
+                options: ["Yağmur yağdığı için şemsiyesini aldı.", "Akşam sinemaya gideceğiz.", "Elindeki poşetler çok ağırdı."],
+                answer: 0
+            },
+            {
+                question: "'Kanatlı at, bulutların üzerinde dans ediyordu.' cümlesindeki hayal ürünü ifade hangisidir?",
+                options: ["Bulutların olması", "Atın kanatlı olması", "Dans edilmesi"],
+                answer: 1
+            },
+            {
+                question: "'<strong>Yüz</strong>' kelimesi aşağıdaki cümlelerin hangisinde sayı anlamında kullanılmıştır?",
+                options: ["Arkadaşım derede yüzdü.", "Bu sınavdan yüz aldım.", "Sabah kalkınca yüzünü yıkadı."],
+                answer: 1
+            }
+        ];
+
+        // Element Referansları
+        const gameScreen = document.getElementById('game-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        const livesEl = document.getElementById('lives');
+        const questionCounterEl = document.getElementById('question-counter');
+        const paragraphTextEl = document.getElementById('paragraph-text');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const resultsMessageEl = document.getElementById('results-message');
+        const restartBtn = document.getElementById('restart-btn');
+
+        // Oyun Değişkenleri
+        let currentQuestionIndex;
+        let lives;
+        let score;
+        const optionColors = ['#3498db', '#e67e22', '#9b59b6', '#1abc9c'];
+
+        function startGame() {
+            currentQuestionIndex = 0;
+            lives = 4;
+            score = 0;
+            
+            resultsScreen.style.display = 'none';
+            gameScreen.style.display = 'block';
+
+            updateLives();
+            loadQuestion();
+        }
+
+        function updateLives() {
+            livesEl.innerHTML = '';
+            for (let i = 0; i < 4; i++) {
+                const star = document.createElement('i');
+                star.className = 'fa-solid fa-star';
+                star.style.opacity = i < lives ? '1' : '0.3';
+                livesEl.appendChild(star);
+            }
+        }
+
+        function loadQuestion() {
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            // Paragraf kontrolü
+            if (currentQuestion.paragraph) {
+                 paragraphTextEl.innerHTML = currentQuestion.paragraph;
+                 paragraphTextEl.style.display = 'block';
+            } else {
+                 paragraphTextEl.style.display = 'none';
+            }
+            
+            questionTextEl.innerHTML = currentQuestion.question;
+            questionCounterEl.textContent = `Soru ${currentQuestionIndex + 1} / ${questions.length}`;
+            
+            optionsContainer.innerHTML = '';
+            
+            currentQuestion.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.innerHTML = `<span style="margin-right: 8px;">${String.fromCharCode(65 + index)})</span> ${option}`;
+                button.style.backgroundColor = optionColors[index % optionColors.length];
+                button.addEventListener('click', () => selectAnswer(index, button));
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function selectAnswer(selectedIndex, button) {
+            // Butonları pasif yap
+            Array.from(optionsContainer.children).forEach(btn => btn.disabled = true);
+
+            const correctIndex = questions[currentQuestionIndex].answer;
+
+            if (selectedIndex === correctIndex) {
+                button.classList.add('correct');
+                score++;
+            } else {
+                button.classList.add('incorrect');
+                lives--;
+                updateLives();
+                // Doğru cevabı göster
+                optionsContainer.children[correctIndex].classList.add('correct');
+            }
+            
+            setTimeout(() => {
+                if (lives === 0 || currentQuestionIndex === questions.length - 1) {
+                    endGame();
+                } else {
+                    currentQuestionIndex++;
+                    loadQuestion();
+                }
+            }, 1500); // 1.5 saniye bekle
+        }
+
+        function endGame() {
+            gameScreen.style.display = 'none';
+            resultsScreen.style.display = 'block';
+
+            let message = `Tebrikler! Testi tamamladın. <br> Toplam <strong>${score}</strong> doğru cevabın var.`;
+            if(lives === 0) {
+                message = `Oyun bitti! Maalesef tüm canlarını kaybettin. <br> Toplam <strong>${score}</strong> doğru cevabın var.`;
+            }
+            resultsMessageEl.innerHTML = message;
+        }
+
+        restartBtn.addEventListener('click', startGame);
+
+        // Oyunu başlat
+        startGame();
+
+    </script>
+</body>
+</html>
